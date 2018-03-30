@@ -1,9 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
-
 import React, { Component } from 'react';
 import {
   Platform,
@@ -11,27 +5,65 @@ import {
   Text,
   View
 } from 'react-native';
+import firebase from 'react-native-firebase';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' +
-    'Cmd+D or shake for dev menu',
-  android: 'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+const firebaseRemoteConfig = firebase.config();
+const remoteConfigDefaults = {
+    product_honda: 'NSX',
+    product_toyota: 'Supra',
+    product_nissan: 'GTR',
+    product_bmw: 'M6',
+    product_benz: 'SLR'
+};  
+const keys = ['product_honda', 'product_toyota', 'product_nissan', 'product_bmw','product_benz'];
 
-type Props = {};
-export default class App extends Component<Props> {
+export default class App extends Component {
+
+  state = ({
+    product_honda: 'None',
+    product_toyota: 'None',
+    product_nissan: 'None',
+    product_bmw: 'None',
+    product_benz: 'None'
+  });    
+
+  componentDidMount() {
+    // Set default values
+    firebaseRemoteConfig.setDefaults({
+      ...remoteConfigDefaults,
+    });
+
+    firebaseRemoteConfig.getValues(keys)
+    .then((data) => {
+      console.log(data);
+      this.setState({
+        product_honda: data.product_honda.val(),
+        product_toyota: data.product_toyota.val(),
+        product_nissan: data.product_nissan.val(),
+        product_bmw: data.product_bmw.val(),
+        product_benz: data.product_benz.val(),
+      });
+      console.log(this.state);
+    });
+  }
+
   render() {
     return (
       <View style={styles.container}>
         <Text style={styles.welcome}>
-          Welcome to React Native!
+          Honda : {this.state.product_honda}
         </Text>
-        <Text style={styles.instructions}>
-          To get started, edit App.js
+        <Text style={styles.welcome}>
+          Toyota : {this.state.product_toyota}
         </Text>
-        <Text style={styles.instructions}>
-          {instructions}
+        <Text style={styles.welcome}>
+          Nissan : {this.state.product_nissan}
+        </Text>
+        <Text style={styles.welcome}>
+          BMW : {this.state.product_bmw}
+        </Text>
+        <Text style={styles.welcome}>
+          BENZ : {this.state.product_benz}
         </Text>
       </View>
     );
@@ -49,10 +81,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
     margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
+  }
 });
