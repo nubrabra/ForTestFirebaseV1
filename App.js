@@ -8,6 +8,7 @@ import {
 import firebase from 'react-native-firebase';
 
 const firebaseRemoteConfig = firebase.config();
+
 const remoteConfigDefaults = {
     product_honda: 'NSX',
     product_toyota: 'Supra',
@@ -15,36 +16,58 @@ const remoteConfigDefaults = {
     product_bmw: 'M6',
     product_benz: 'SLR'
 };  
-const keys = ['product_honda', 'product_toyota', 'product_nissan', 'product_bmw','product_benz'];
+
 
 export default class App extends Component {
 
   state = ({
-    product_honda: 'None',
-    product_toyota: 'None',
-    product_nissan: 'None',
-    product_bmw: 'None',
-    product_benz: 'None'
+    product_honda: '',
+    product_toyota: '',
+    product_nissan: '',
+    product_bmw: '',
+    product_benz: ''
   });    
 
+  getRemoteValues = () => {
+    const keys = ['product_honda', 'product_toyota', 'product_nissan', 'product_bmw','product_benz'];
+    const cacheExpiration = __DEV__ ? 0 : 0;  // 1 hour
+
+    firebaseRemoteConfig.fetch(cacheExpiration)
+      .then((res) => firebaseRemoteConfig.activateFetched())
+      .then((activated) => {
+        if (!activated) console.log('Fetched data not activated');
+        return firebaseRemoteConfig.getValues(keys);
+      })
+      .then((datas) => {
+        console.log('datas : ', datas)
+        const product_honda = datas.product_honda.val();
+        const product_toyota = datas.product_toyota.val();
+        const product_nissan = datas.product_nissan.val();
+        const product_bmw = datas.product_bmw.val();
+        const product_benz = datas.product_benz.val();
+
+        this.setState({
+          product_honda,
+          product_toyota,
+          product_nissan,
+          product_bmw,
+          product_benz
+        });
+      })
+      .catch((error) => console.log('err : ', error) )
+  }
+
   componentDidMount() {
+    if (__DEV__) {
+      firebaseRemoteConfig.enableDeveloperMode();
+    }
+
     // Set default values
     firebaseRemoteConfig.setDefaults({
       ...remoteConfigDefaults,
     });
 
-    firebaseRemoteConfig.getValues(keys)
-    .then((data) => {
-      console.log(data);
-      this.setState({
-        product_honda: data.product_honda.val(),
-        product_toyota: data.product_toyota.val(),
-        product_nissan: data.product_nissan.val(),
-        product_bmw: data.product_bmw.val(),
-        product_benz: data.product_benz.val(),
-      });
-      console.log(this.state);
-    });
+    this.getRemoteValues();
   }
 
   render() {
